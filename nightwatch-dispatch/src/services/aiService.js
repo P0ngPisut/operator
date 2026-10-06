@@ -206,16 +206,19 @@ export async function generateGeminiScenarioNarratives({ apiKey, incidents }) {
       severity,
       caller: callerName,
     }));
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: 'You are a creative scenario writer for a Thai emergency-dispatch simulation. For every supplied incident, invent a distinct, coherent, vivid, original emergency and caller voice. You have broad creative freedom over the story, setting, people, complications, and dialogue. Keep the supplied ID, department, and severity unchanged. Do not include coordinates, block/sector/unit numbers, or reveal the caller location. Write natural Thai. Return only JSON: {"incidents":[{"id":"...","title":"...","incidentType":"...","openingText":"...","detail":"...","followUp":"...","confirmed":"...","panic":"...","callerStyle":"...","streetRestriction":"..."}]}.' }] },
         contents: [{ role: 'user', parts: [{ text: JSON.stringify(scenarioBriefs) }] }],
         generationConfig: { responseMimeType: 'application/json', temperature: 1.2, maxOutputTokens: 6000 },
       }),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`Gemini scenario request failed (${response.status}); using procedural scenarios.`);
+      return null;
+    }
     const data = await response.json();
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!raw) return null;
@@ -277,9 +280,9 @@ export async function callGeminiForDialogue({ apiKey, scenario, history, playerM
       }
     ];
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         contents,
         systemInstruction: { parts: [{ text: systemInstruction }] },
@@ -291,7 +294,10 @@ export async function callGeminiForDialogue({ apiKey, scenario, history, playerM
       })
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`Gemini dialogue request failed (${response.status}); using procedural dialogue.`);
+      return null;
+    }
     const data = await response.json();
     const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!candidateText) return null;

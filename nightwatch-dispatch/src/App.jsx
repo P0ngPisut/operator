@@ -601,7 +601,8 @@ export default function App() {
           <label className="block text-[10px] text-neutral-400">Google Gemini API key
             <input type="password" value={geminiKey} onChange={(event) => setGeminiKey(event.target.value)} placeholder="Paste API key" className="mt-1 w-full border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-500" />
           </label>
-          <p className="mt-2 text-[9px] text-neutral-500">Uses VITE_GEMINI_API_KEY when set. Without a key or if Gemini fails, procedural dialogue is used.</p>
+          <p className="mt-2 text-[9px] text-emerald-400">บันทึก key อัตโนมัติในเบราว์เซอร์นี้</p>
+          <p className="mt-1 text-[9px] text-neutral-500">ปิดหน้าต่างนี้แล้วเริ่มกะใหม่ หรือส่งข้อความระหว่างเหตุการณ์เพื่อเรียก AI หากไม่มี key หรือเรียกไม่สำเร็จ เกมจะใช้ระบบสำรอง</p>
         </div>}
         {state.isGameOver && (
           <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-6 text-center border-4 border-red-600">
