@@ -160,12 +160,18 @@ export default function MapViewport({ activeIncident, state, onViewportChange, o
   }), []);
 
   const saveViewport = (nextViewport) => {
-    const clamped = clampViewportToMap(nextViewport);
+    const clamped = clampViewportToMap({ ...nextViewport, ...viewportSize });
     onViewportChange({ x: clamped.x, y: clamped.y, zoom: clamped.zoom });
   };
 
   const focusPoint = (point, zoom = camera.zoom) => {
     saveViewport({ ...camera, x: point.x, y: point.y, zoom });
+  };
+
+  const focusIncident = () => {
+    if (!activeIncident) return;
+    onSelectionChange({ incidentId: activeIncident.id });
+    focusPoint(incidentPosition, Math.max(2, camera.zoom));
   };
 
   const focusDistrict = (district) => {
@@ -370,13 +376,13 @@ export default function MapViewport({ activeIncident, state, onViewportChange, o
         <span className="min-w-9 text-center font-mono text-[9px] text-cyan-300">{camera.zoom.toFixed(1)}×</span>
         <button type="button" className="p-1 text-neutral-200 hover:bg-neutral-800" aria-label="Zoom in" title="Zoom in" onClick={() => changeZoom(camera.zoom * 1.25)}><Plus className="h-3.5 w-3.5" /></button>
         <button type="button" className="p-1 text-neutral-200 hover:bg-neutral-800" aria-label="Reset map view" title="Reset map view" onClick={handleReset}><RotateCcw className="h-3.5 w-3.5" /></button>
-        <button type="button" className="p-1 text-red-300 hover:bg-neutral-800" aria-label="Focus incident" title="Focus incident" onClick={() => focusPoint(incidentPosition, Math.max(2, camera.zoom))}><LocateFixed className="h-3.5 w-3.5" /></button>
+        <button type="button" className="p-1 text-red-300 hover:bg-neutral-800" aria-label="Focus incident" title="Focus incident" onClick={focusIncident}><LocateFixed className="h-3.5 w-3.5" /></button>
         {vehiclePosition && <button type="button" className="p-1 text-cyan-300 hover:bg-neutral-800" aria-label="Focus unit" title="Focus unit" onClick={() => focusPoint(vehiclePosition, Math.max(2, camera.zoom))}><LocateFixed className="h-3.5 w-3.5" /></button>}
       </div>
 
       {activeIncident && <button
         type="button"
-        onClick={() => focusPoint(incidentPosition, Math.max(2, camera.zoom))}
+        onClick={focusIncident}
         aria-label={`Incident alert: ${activeIncident.title}`}
         title={`${activeIncident.title} · SEV ${activeIncident.severity}`}
         className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-red-500/70 bg-neutral-950/95 text-red-300 shadow-lg hover:bg-red-950"

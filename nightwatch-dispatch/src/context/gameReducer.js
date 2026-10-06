@@ -497,9 +497,6 @@ function startIncident(state, incident) {
     activeDeptTab,
     selectedVehicleSlot: 'A',
     selectedStaffCount: Math.min(startingVehicle?.crewMin || 1, availableStaff),
-    mapViewport: incident.worldPosition
-      ? { ...state.mapViewport, x: incident.worldPosition.x, y: incident.worldPosition.y }
-      : state.mapViewport,
     mapSelection: { ...state.mapSelection, incidentId: incident.id },
     callerConversationActive: conversationRequired,
     ipTraceProgress: 0,
