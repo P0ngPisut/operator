@@ -1,5 +1,3 @@
-import { Howl } from 'howler';
-
 // Web Audio API Procedural Radio Static & Beep Generator
 export class SoundController {
   static audioCtx = null;
@@ -34,7 +32,7 @@ export class SoundController {
 
       osc.start();
       osc.stop(ctx.currentTime + 0.08);
-    } catch (e) {
+    } catch {
       console.warn("Audio Context init fallback");
     }
   }
@@ -67,7 +65,7 @@ export class SoundController {
       gain.connect(ctx.destination);
 
       whiteNoise.start();
-    } catch (e) {
+    } catch {
       console.warn("Audio Context init fallback");
     }
   }
