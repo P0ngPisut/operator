@@ -1,4 +1,5 @@
 import { CITY, getMapLocation } from '../data/map/city.js';
+import { snapWorldPointToRoad } from '../pathfinding/graph.js';
 
 export function getGeminiApiKey() {
   if (typeof window === 'undefined') return '';
@@ -146,8 +147,11 @@ export function generateDynamicIncident(playerLevel = 1, fixedSeverity = null) {
   const callerName = `${firstName} ${lastName}`;
 
   // Random coordinates in 20km x 20km
-  const worldX = Math.floor(Math.random() * (CITY.widthM * 0.75)) + Math.floor(CITY.widthM * 0.12);
-  const worldY = Math.floor(Math.random() * (CITY.heightM * 0.75)) + Math.floor(CITY.heightM * 0.12);
+  // Random point in the city, snapped onto the nearest road of the painted map.
+  const { x: worldX, y: worldY } = snapWorldPointToRoad({
+    x: Math.floor(Math.random() * (CITY.widthM * 0.75)) + Math.floor(CITY.widthM * 0.12),
+    y: Math.floor(Math.random() * (CITY.heightM * 0.75)) + Math.floor(CITY.heightM * 0.12),
+  });
   const mapLoc = getMapLocation(worldX, worldY);
 
   const blockPart = String(mapLoc.cellColumn).padStart(3, '0');

@@ -30,6 +30,8 @@ export default function App() {
   const [waitingForCaller, setWaitingForCaller] = useState(false);
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('nightwatch_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [language, setLanguage] = useState(() => localStorage.getItem('nightwatch_language') === 'th' ? 'th' : 'en');
+  const text = (english, thai) => language === 'th' ? thai : english;
 
   // Load the next call only after the previous incident is resolved.
   useEffect(() => {
@@ -60,6 +62,11 @@ export default function App() {
     if (geminiKey) localStorage.setItem('nightwatch_gemini_api_key', geminiKey);
     else localStorage.removeItem('nightwatch_gemini_api_key');
   }, [geminiKey]);
+
+  useEffect(() => {
+    localStorage.setItem('nightwatch_language', language);
+    document.documentElement.lang = language;
+  }, [language]);
 
   // Advance the route using simulated time rather than a fixed arrival timeout.
   useEffect(() => {
@@ -597,12 +604,18 @@ export default function App() {
 
       <div className="nightwatch-shell">
         {settingsOpen && <div className="absolute right-4 top-14 z-50 w-80 border border-neutral-700 bg-neutral-950 p-4 shadow-xl">
-          <div className="mb-2 flex items-center justify-between"><b className="text-sm text-cyan-300">AI SETTINGS</b><button type="button" onClick={() => setSettingsOpen(false)} aria-label="Close settings">×</button></div>
-          <label className="block text-[10px] text-neutral-400">Google Gemini API key
-            <input type="password" value={geminiKey} onChange={(event) => setGeminiKey(event.target.value)} placeholder="Paste API key" className="mt-1 w-full border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-500" />
+          <div className="mb-3 flex items-center justify-between"><b className="text-sm text-cyan-300">{text('SETTINGS', 'ตั้งค่า')}</b><button type="button" onClick={() => setSettingsOpen(false)} aria-label={text('Close settings', 'ปิดหน้าตั้งค่า')}>×</button></div>
+          <label className="mb-3 block text-[10px] text-neutral-400">{text('LANGUAGE', 'ภาษา')}
+            <select value={language} onChange={(event) => setLanguage(event.target.value)} className="mt-1 w-full border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-500">
+              <option value="th">ไทย</option>
+              <option value="en">English</option>
+            </select>
           </label>
-          <p className="mt-2 text-[9px] text-emerald-400">บันทึก key อัตโนมัติในเบราว์เซอร์นี้</p>
-          <p className="mt-1 text-[9px] text-neutral-500">ปิดหน้าต่างนี้แล้วเริ่มกะใหม่ หรือส่งข้อความระหว่างเหตุการณ์เพื่อเรียก AI หากไม่มี key หรือเรียกไม่สำเร็จ เกมจะใช้ระบบสำรอง</p>
+          <label className="block text-[10px] text-neutral-400">{text('Google Gemini API key', 'คีย์ Google Gemini API')}
+            <input type="password" value={geminiKey} onChange={(event) => setGeminiKey(event.target.value)} placeholder={text('Paste API key', 'วาง API key')} className="mt-1 w-full border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-500" />
+          </label>
+          <p className="mt-2 text-[9px] text-emerald-400">{text('Key is saved automatically in this browser.', 'บันทึก key อัตโนมัติในเบราว์เซอร์นี้')}</p>
+          <p className="mt-1 text-[9px] text-neutral-500">{text('Close this panel and start a new shift, or send a message during an incident to use AI. The game uses fallback dialogue if no key is set or the request fails.', 'ปิดหน้าต่างนี้แล้วเริ่มกะใหม่ หรือส่งข้อความระหว่างเหตุการณ์เพื่อเรียก AI หากไม่มี key หรือเรียกไม่สำเร็จ เกมจะใช้ระบบสำรอง')}</p>
         </div>}
         {state.isGameOver && (
           <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-6 text-center border-4 border-red-600">
@@ -610,11 +623,11 @@ export default function App() {
             <h1 className="text-3xl font-bold text-red-500 tracking-widest mb-2">AGENCY TERMINATED // GAME OVER</h1>
             <p className="text-neutral-400 mb-6">
               {state.gameOverReason === 'BANKRUPTCY'
-                ? 'สาเหตุ: องค์กรล้มละลาย (Operating Funds ติดลบ)'
-                : 'สาเหตุ: ความน่าเชื่อถือล่มสลาย (Lost Case สะสมเกินกำหนด)'}
+                ? text('Cause: Agency bankruptcy (operating funds fell below zero).', 'สาเหตุ: องค์กรล้มละลาย (เงินดำเนินงานติดลบ)')
+                : text('Cause: Reputation collapsed (too many lost cases).', 'สาเหตุ: ความน่าเชื่อถือล่มสลาย (คดีที่ล้มเหลวสะสมเกินกำหนด)')}
             </p>
             <button onClick={() => window.location.reload()} className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded font-bold transition">
-              REBOOT SYSTEM (RETRY)
+              {text('REBOOT SYSTEM (RETRY)', 'เริ่มระบบใหม่ (ลองอีกครั้ง)')}
             </button>
           </div>
         )}
@@ -627,12 +640,12 @@ export default function App() {
           </div>
 
           <div className="nightwatch-spacer" />
-          <button type="button" className="border border-neutral-700 px-2 py-1 text-xs text-cyan-300 hover:bg-neutral-800" onClick={() => setSettingsOpen(!settingsOpen)}>⚙ Settings</button>
+          <button type="button" className="border border-neutral-700 px-2 py-1 text-xs text-cyan-300 hover:bg-neutral-800" onClick={() => setSettingsOpen(!settingsOpen)}>⚙ {text('Settings', 'ตั้งค่า')}</button>
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 bg-[#0b0d0f] border border-[#2a3138] px-2.5 py-1 rounded">
               <Award className="w-4 h-4 text-amber-400" />
-              <span className="text-amber-400 font-bold">LVL {state.level}</span>
+              <span className="text-amber-400 font-bold">{text('LVL', 'เลเวล')} {state.level}</span>
               <div className="w-20 h-1.5 bg-neutral-800 rounded-full overflow-hidden ml-1">
                 <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${(state.xp / state.xpToNextLevel) * 100}%` }} />
               </div>
@@ -640,7 +653,7 @@ export default function App() {
 
             <div className="flex items-center gap-2">
               <Radio className="w-4 h-4 text-emerald-400" />
-              <span className="text-emerald-400">REP: {state.reputation}%</span>
+              <span className="text-emerald-400">{text('REP:', 'ชื่อเสียง:')} {state.reputation}%</span>
             </div>
 
             <div className="flex items-center gap-1 text-amber-400">
@@ -661,12 +674,12 @@ export default function App() {
               <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
                 <div>
                   <h1 className="text-xl font-bold text-cyan-400 flex items-center gap-2">
-                    <ShoppingBag className="w-5 h-5" /> PRE-SHIFT SHOP & TACTICAL UPGRADES
+                    <ShoppingBag className="w-5 h-5" /> {text('PRE-SHIFT SHOP & TACTICAL UPGRADES', 'ร้านค้าก่อนเข้ากะและอัปเกรดยุทธวิธี')}
                   </h1>
                   <p className="text-xs text-neutral-400 mt-1">จัดซื้อยุทโธปกรณ์และจ้างกำลังพลเสริมก่อนเริ่มกะปฏิบัติการ</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-neutral-500 block">AVAILABLE FUNDS</span>
+                  <span className="text-xs text-neutral-500 block">{text('AVAILABLE FUNDS', 'เงินคงเหลือ')}</span>
                   <span className="text-xl font-bold text-amber-400">${state.funds.toLocaleString()}</span>
                 </div>
               </div>
@@ -675,10 +688,10 @@ export default function App() {
                 <div className="bg-neutral-900 border border-neutral-800 p-4 rounded flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between text-xs mb-2">
-                      <span className="font-bold text-neutral-200">PATROL SEDAN (POLICE)</span>
+                      <span className="font-bold text-neutral-200">{text('PATROL SEDAN (POLICE)', 'รถสายตรวจ (ตำรวจ)')}</span>
                       <span className="text-amber-400 font-bold">$4,500</span>
                     </div>
-                    <p className="text-xs text-neutral-400 mb-3">รถตรวจการณ์สายตรวจ บรรจุตำรวจได้ 2-3 นาย</p>
+                    <p className="text-xs text-neutral-400 mb-3">{text('Police patrol car. Seats 2–3 officers.', 'รถตรวจการณ์สายตรวจ บรรจุตำรวจได้ 2-3 นาย')}</p>
                   </div>
                   <button
                     onClick={() => dispatch({
@@ -688,22 +701,22 @@ export default function App() {
                     disabled={state.funds < 4500 || state.inventory.policeVehicles.includes('PATROL_SEDAN')}
                     className="w-full bg-cyan-700 hover:bg-cyan-600 disabled:bg-neutral-800 disabled:text-neutral-600 text-white text-xs font-bold py-2 rounded transition"
                   >
-                    PURCHASE VEHICLE
+                    {text('PURCHASE VEHICLE', 'ซื้อยานพาหนะ')}
                   </button>
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800 p-4 rounded flex flex-col justify-between relative overflow-hidden">
                   {state.level < 4 && (
                     <div className="absolute inset-0 bg-black/80 z-10 flex flex-col items-center justify-center text-xs text-amber-400 font-bold">
-                      <Lock className="w-5 h-5 mb-1" /> UNLOCKS AT LEVEL 4
+                      <Lock className="w-5 h-5 mb-1" /> {text('UNLOCKS AT LEVEL 4', 'ปลดล็อกเมื่อถึงเลเวล 4')}
                     </div>
                   )}
                   <div>
                     <div className="flex justify-between text-xs mb-2">
-                      <span className="font-bold text-neutral-200">SWAT CARRIER (POLICE)</span>
+                      <span className="font-bold text-neutral-200">{text('SWAT CARRIER (POLICE)', 'รถลำเลียง SWAT (ตำรวจ)')}</span>
                       <span className="text-amber-400 font-bold">$30,000</span>
                     </div>
-                    <p className="text-xs text-neutral-400 mb-3">รถหุ้มเกราะหนา บรรจุเจ้าหน้าที่ SWAT 6 นาย สำหรับเหตุ SEV 6-8</p>
+                    <p className="text-xs text-neutral-400 mb-3">{text('Heavy armored vehicle carrying 6 SWAT officers for SEV 6–8 incidents.', 'รถหุ้มเกราะ บรรจุเจ้าหน้าที่ SWAT 6 นาย สำหรับเหตุระดับ 6-8')}</p>
                   </div>
                   <button
                     onClick={() => dispatch({
@@ -713,17 +726,17 @@ export default function App() {
                     disabled={state.funds < 30000 || state.inventory.policeVehicles.includes('SWAT_CARRIER') || state.level < 4}
                     className="w-full bg-cyan-700 hover:bg-cyan-600 disabled:bg-neutral-800 disabled:text-neutral-600 text-white text-xs font-bold py-2 rounded transition"
                   >
-                    PURCHASE VEHICLE
+                    {text('PURCHASE VEHICLE', 'ซื้อยานพาหนะ')}
                   </button>
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800 p-4 rounded flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between text-xs mb-2">
-                      <span className="font-bold text-neutral-200">TACTICAL VEST UPGRADE</span>
+                      <span className="font-bold text-neutral-200">{text('TACTICAL VEST UPGRADE', 'อัปเกราะยุทธวิธี')}</span>
                       <span className="text-amber-400 font-bold">$500</span>
                     </div>
-                    <p className="text-xs text-neutral-400 mb-3">ลดอัตราการบาดเจ็บของเจ้าหน้าที่ตำรวจลง 15%</p>
+                    <p className="text-xs text-neutral-400 mb-3">{text('Reduces police officer injuries by 15%.', 'ลดอัตราการบาดเจ็บของเจ้าหน้าที่ตำรวจลง 15%')}</p>
                   </div>
                   <button
                     onClick={() => dispatch({
@@ -733,14 +746,14 @@ export default function App() {
                     disabled={state.funds < 500 || state.inventory.hasArmorVest}
                     className="w-full bg-cyan-700 hover:bg-cyan-600 disabled:bg-neutral-800 disabled:text-neutral-600 text-white text-xs font-bold py-2 rounded transition"
                   >
-                    {state.inventory.hasArmorVest ? 'PURCHASED' : 'PURCHASE UPGRADE'}
+                    {state.inventory.hasArmorVest ? text('PURCHASED', 'ซื้อแล้ว') : text('PURCHASE UPGRADE', 'ซื้ออัปเกรด')}
                   </button>
                 </div>
 
                 {[
-                  { id: 'POLICE_RECRUIT', label: 'HIRE POLICE OFFICER', itemKey: 'policeStaffCount', cost: 500 },
-                  { id: 'FIRE_RECRUIT', label: 'HIRE FIREFIGHTER', itemKey: 'fireStaffCount', cost: 450 },
-                  { id: 'MEDICAL_RECRUIT', label: 'HIRE PARAMEDIC', itemKey: 'medicalStaffCount', cost: 600 },
+                  { id: 'POLICE_RECRUIT', label: text('HIRE POLICE OFFICER', 'จ้างเจ้าหน้าที่ตำรวจ'), itemKey: 'policeStaffCount', cost: 500 },
+                  { id: 'FIRE_RECRUIT', label: text('HIRE FIREFIGHTER', 'จ้างนักดับเพลิง'), itemKey: 'fireStaffCount', cost: 450 },
+                  { id: 'MEDICAL_RECRUIT', label: text('HIRE PARAMEDIC', 'จ้างเจ้าหน้าที่กู้ชีพ'), itemKey: 'medicalStaffCount', cost: 600 },
                 ].map((hire) => (
                   <div key={hire.id} className="bg-neutral-900 border border-neutral-800 p-4 flex flex-col justify-between">
                     <div>
@@ -748,7 +761,7 @@ export default function App() {
                         <span className="font-bold text-neutral-200">{hire.label}</span>
                         <span className="text-amber-400 font-bold">${hire.cost.toLocaleString()}</span>
                       </div>
-                      <p className="text-xs text-neutral-400 mb-3">เพิ่มเจ้าหน้าที่ประจำหน่วย 1 คน · ปัจจุบัน {state.inventory[hire.itemKey]}/12</p>
+                      <p className="text-xs text-neutral-400 mb-3">{text('Adds one department staff member · Current', 'เพิ่มเจ้าหน้าที่ประจำหน่วย 1 คน · ปัจจุบัน')} {state.inventory[hire.itemKey]}/12</p>
                     </div>
                     <button
                       type="button"
@@ -756,7 +769,7 @@ export default function App() {
                       disabled={state.funds < hire.cost || state.inventory[hire.itemKey] >= 12}
                       className="w-full bg-cyan-700 hover:bg-cyan-600 disabled:bg-neutral-800 disabled:text-neutral-600 text-white text-xs font-bold py-2 transition"
                     >
-                      HIRE STAFF
+                      {text('HIRE STAFF', 'จ้างเจ้าหน้าที่')}
                     </button>
                   </div>
                 ))}
@@ -771,13 +784,13 @@ export default function App() {
                       const locked = state.level < vehicle.minLevel;
                       return (
                         <div key={vehicle.id} className="bg-neutral-900 border border-neutral-800 p-4 flex flex-col justify-between relative overflow-hidden">
-                          {locked && <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 text-xs font-bold text-amber-400"><Lock className="mb-1 h-5 w-5" />UNLOCKS AT LEVEL {vehicle.minLevel}</div>}
+                          {locked && <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/85 text-xs font-bold text-amber-400"><Lock className="mb-1 h-5 w-5" />{text('UNLOCKS AT LEVEL', 'ปลดล็อกเมื่อถึงเลเวล')} {vehicle.minLevel}</div>}
                           <div>
                             <div className="mb-2 flex justify-between gap-2 text-xs">
                               <span className="font-bold text-neutral-200">{vehicle.name} · {department.toUpperCase()}</span>
                               <span className="whitespace-nowrap font-bold text-amber-400">${vehicle.purchaseCost.toLocaleString()}</span>
                             </div>
-                            <p className="mb-3 text-xs text-neutral-400">{vehicle.desc} · {vehicle.speedKph} km/h · Crew {vehicle.crewMin}-{vehicle.crewMax}</p>
+                            <p className="mb-3 text-xs text-neutral-400">{vehicle.desc} · {vehicle.speedKph} km/h · {text('Crew', 'กำลังพล')} {vehicle.crewMin}-{vehicle.crewMax}</p>
                           </div>
                           <button
                             type="button"
@@ -785,7 +798,7 @@ export default function App() {
                             disabled={state.funds < vehicle.purchaseCost || owned || locked}
                             className="w-full bg-cyan-700 py-2 text-xs font-bold text-white transition hover:bg-cyan-600 disabled:bg-neutral-800 disabled:text-neutral-600"
                           >
-                            {owned ? 'OWNED' : 'PURCHASE VEHICLE'}
+                            {owned ? text('OWNED', 'มีแล้ว') : text('PURCHASE VEHICLE', 'ซื้อยานพาหนะ')}
                           </button>
                         </div>
                       );
@@ -794,12 +807,12 @@ export default function App() {
             </div>
 
             <div className="border-t border-neutral-800 pt-4 flex justify-between items-center">
-              <span className="text-xs text-neutral-400">SHIFT READY: 15-20 INCIDENTS SCHEDULED</span>
+              <span className="text-xs text-neutral-400">{text('SHIFT READY: 15-20 INCIDENTS SCHEDULED', 'พร้อมปฏิบัติงาน: จัดเตรียมเหตุ 15-20 เหตุการณ์')}</span>
               <button
                 onClick={startShift}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-2.5 rounded text-xs tracking-wider flex items-center gap-2 transition"
               >
-                <Zap className="w-4 h-4 fill-current" /> START SHIFT #{state.shift}
+                <Zap className="w-4 h-4 fill-current" /> {text('START SHIFT', 'เริ่มกะ')} #{state.shift}
               </button>
             </div>
           </main>
@@ -808,26 +821,26 @@ export default function App() {
             <section className="mx-auto max-w-5xl border border-neutral-800 bg-neutral-900 p-6">
               <div className="mb-6 flex items-start justify-between border-b border-neutral-800 pb-4">
                 <div>
-                  <p className="font-mono text-[10px] tracking-[0.25em] text-cyan-400">NIGHTWATCH / SHIFT REPORT</p>
-                  <h1 className="mt-2 text-2xl font-bold text-neutral-100">SHIFT #{state.shift} COMPLETE</h1>
+                  <p className="font-mono text-[10px] tracking-[0.25em] text-cyan-400">NIGHTWATCH / {text('SHIFT REPORT', 'รายงานผลัดเวร')}</p>
+                  <h1 className="mt-2 text-2xl font-bold text-neutral-100">{text('SHIFT', 'กะ')} #{state.shift} {text('COMPLETE', 'เสร็จสิ้น')}</h1>
                 </div>
-                <span className="font-mono text-xl text-emerald-400">{state.successfulCases}/{state.casesCompleted} SUCCESS</span>
+                <span className="font-mono text-xl text-emerald-400">{state.successfulCases}/{state.casesCompleted} {text('SUCCESS', 'สำเร็จ')}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-px bg-neutral-800 sm:grid-cols-4">
-                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">CASES COMPLETED</span><b className="mt-1 block font-mono text-xl">{state.casesCompleted}</b></div>
-                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">SUCCESS RATE</span><b className="mt-1 block font-mono text-xl text-cyan-300">{state.casesCompleted ? Math.round(state.successfulCases / state.casesCompleted * 100) : 0}%</b></div>
-                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">LIVES SAVED</span><b className="mt-1 block font-mono text-xl text-emerald-400">{state.livesSaved}</b></div>
-                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">STAFF INJURED</span><b className="mt-1 block font-mono text-xl text-amber-400">{state.staffInjuredCount}</b></div>
+                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">{text('CASES COMPLETED', 'คดีที่ดำเนินการ')}</span><b className="mt-1 block font-mono text-xl">{state.casesCompleted}</b></div>
+                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">{text('SUCCESS RATE', 'อัตราความสำเร็จ')}</span><b className="mt-1 block font-mono text-xl text-cyan-300">{state.casesCompleted ? Math.round(state.successfulCases / state.casesCompleted * 100) : 0}%</b></div>
+                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">{text('LIVES SAVED', 'ช่วยชีวิตได้')}</span><b className="mt-1 block font-mono text-xl text-emerald-400">{state.livesSaved}</b></div>
+                <div className="bg-neutral-950 p-4"><span className="block text-[10px] text-neutral-500">{text('STAFF INJURED', 'เจ้าหน้าที่บาดเจ็บ')}</span><b className="mt-1 block font-mono text-xl text-amber-400">{state.staffInjuredCount}</b></div>
               </div>
 
               <div className="mt-5 flex flex-wrap items-end justify-between gap-4 border-t border-neutral-800 pt-4">
                 <div className="font-mono text-xs text-neutral-400">
-                  <div>FUNDS <span className="text-amber-400">${state.funds.toLocaleString()}</span></div>
-                  <div className="mt-1">REPUTATION <span className="text-emerald-400">{state.reputation}%</span> · LEVEL <span className="text-cyan-300">{state.level}</span></div>
+                  <div>{text('FUNDS', 'เงินทุน')} <span className="text-amber-400">${state.funds.toLocaleString()}</span></div>
+                  <div className="mt-1">{text('REPUTATION', 'ชื่อเสียง')} <span className="text-emerald-400">{state.reputation}%</span> · {text('LEVEL', 'เลเวล')} <span className="text-cyan-300">{state.level}</span></div>
                 </div>
                 <button type="button" onClick={() => dispatch({ type: 'PREPARE_NEXT_SHIFT' })} className="border border-cyan-600 bg-cyan-950 px-5 py-2 font-mono text-xs font-bold text-cyan-200 hover:bg-cyan-900">
-                  PREPARE SHIFT #{state.shift + 1}
+                  {text('PREPARE SHIFT', 'เตรียมกะ')} #{state.shift + 1}
                 </button>
               </div>
             </section>
@@ -836,8 +849,8 @@ export default function App() {
           <div className="nightwatch-main">
             <section className="nightwatch-panel">
               <div className="nightwatch-panel-header">
-                <span className="text-red-500 font-bold animate-pulse">● LIVE</span>
-                <span className="text-neutral-400">{activeIncident?.id || 'INCIDENT'}</span>
+                <span className="text-red-500 font-bold animate-pulse">● {text('LIVE', 'สด')}</span>
+                <span className="text-neutral-400">{activeIncident?.id || text('INCIDENT', 'เหตุการณ์')}</span>
                 <span className="nightwatch-sev">SEV {activeIncident?.severity || 7}</span>
               </div>
 
@@ -848,12 +861,12 @@ export default function App() {
                     {log.sender === 'CALLER' ? <TypedMessage text={log.text} /> : log.text}
                   </div>
                 ))}
-                {waitingForCaller && <div className="msg caller text-cyan-300"><span className="animate-pulse">CALLER IS RESPONDING ▍</span></div>}
+                {waitingForCaller && <div className="msg caller text-cyan-300"><span className="animate-pulse">{text('CALLER IS RESPONDING', 'ผู้แจ้งเหตุกำลังตอบกลับ')} ▍</span></div>}
               </div>
 
               <div className="nightwatch-timebox">
                 <div className="flex items-center justify-between text-[10px] text-neutral-400 mb-1">
-                  <span>CALLER PANIC</span>
+                  <span>{text('CALLER PANIC', 'ความตื่นตระหนก')}</span>
                   <span className={state.currentPanic >= 60 ? 'text-red-400' : 'text-emerald-400'}>{state.currentPanic}%</span>
                 </div>
                 <form onSubmit={handleDispatcherSubmit} className="flex gap-1 mb-2">
@@ -863,14 +876,14 @@ export default function App() {
                     onChange={(event) => setDispatcherInput(event.target.value)}
                     onFocus={() => setInputFocused(true)}
                     onBlur={() => setInputFocused(false)}
-                    placeholder="พิมพ์ตอบผู้แจ้งเหตุ..."
-                    aria-label="ข้อความตอบผู้แจ้งเหตุ"
+                    placeholder={text('Reply to caller...', 'พิมพ์ตอบผู้แจ้งเหตุ...')}
+                    aria-label={text('Reply to caller', 'ข้อความตอบผู้แจ้งเหตุ')}
                     className="min-w-0 flex-1 bg-neutral-950 border border-neutral-700 px-2 py-1 text-xs text-neutral-200 outline-none focus:border-cyan-500"
                     disabled={!state.callerConversationActive || waitingForCaller || Boolean(state.pendingCallerReply)}
                   />
                   <button
                     type="submit"
-                    aria-label="ส่งข้อความ"
+                    aria-label={text('Send message', 'ส่งข้อความ')}
                     className="border border-cyan-700 bg-cyan-950 px-2 text-cyan-300 hover:bg-cyan-900 disabled:opacity-40"
                     disabled={!dispatcherInput.trim() || !state.callerConversationActive || waitingForCaller || Boolean(state.pendingCallerReply)}
                   >
@@ -880,10 +893,10 @@ export default function App() {
               </div>
 
               <div className="nightwatch-data">
-                <div><span>CALLER</span>{state.callerData.name}</div>
-                <div><span>RISK</span><b className="rd">{state.callerData.risk}</b></div>
-                <div className="col-span-2"><span>LOCATION</span><b className="cy location-coords">{state.callerData.coordsUnlocked ? `[${state.callerData.coords[0]}] [${state.callerData.coords[1]}] [${state.callerData.coords[2]}]` : 'LOCKED'}</b></div>
-                <div><span>TYPE</span>{state.callerData.type}</div>
+                <div><span>{text('CALLER', 'ผู้แจ้งเหตุ')}</span>{state.callerData.name}</div>
+                <div><span>{text('RISK', 'ความเสี่ยง')}</span><b className="rd">{state.callerData.risk}</b></div>
+                <div className="col-span-2"><span>{text('LOCATION', 'ตำแหน่ง')}</span><b className="cy location-coords">{state.callerData.coordsUnlocked ? `[${state.callerData.coords[0]}] [${state.callerData.coords[1]}] [${state.callerData.coords[2]}]` : text('LOCKED', 'ล็อกอยู่')}</b></div>
+                <div><span>{text('TYPE', 'ประเภทเหตุ')}</span>{state.callerData.type}</div>
               </div>
             </section>
 
@@ -892,6 +905,7 @@ export default function App() {
                 <MapPanel
                   activeIncident={activeIncident}
                   state={state}
+                  language={language}
                   onSetCoord={(index, value) => dispatch({ type: 'SET_COORD_INPUT', payload: { index, value } })}
                   onVerify={() => dispatch({ type: 'VERIFY_COORDINATES' })}
                   onSetMapViewport={(payload) => dispatch({ type: 'SET_MAP_VIEWPORT', payload })}
@@ -910,7 +924,7 @@ export default function App() {
                       className={`tab ${state.activeDeptTab === dept ? 'on' : ''}`}
                     >
                       {dept === 'police' ? <Shield className="w-4 h-4" /> : dept === 'fire' ? <Flame className="w-4 h-4" /> : <Ambulance className="w-4 h-4" />}
-                      {dept.toUpperCase()} <kbd>{dept === 'police' ? 'Q' : dept === 'fire' ? 'W' : 'E'}</kbd>
+                      {text(dept.toUpperCase(), { police: 'ตำรวจ', fire: 'ดับเพลิง', medical: 'การแพทย์' }[dept])} <kbd>{dept === 'police' ? 'Q' : dept === 'fire' ? 'W' : 'E'}</kbd>
                     </button>
                   ))}
                 </div>
@@ -927,14 +941,14 @@ export default function App() {
                           <div className="id"><span>{vehicle.name}</span><kbd>{slotKey}</kbd></div>
                           <b>{vehicle.name}</b>
                           <div className="mu" style={{ fontSize: '11px', marginTop: '4px' }}>{vehicle.desc}</div>
-                          <div className="mt-1 font-mono text-[9px] text-neutral-500">{vehicle.speedKph} KM/H · CAP {vehicle.capacity} · {!owned ? 'SHOP' : state.level < vehicle.minLevel ? `LVL ${vehicle.minLevel}` : vehicle.crewMin > staffAvailable ? 'NEED CREW' : 'OWNED'}</div>
+                          <div className="mt-1 font-mono text-[9px] text-neutral-500">{vehicle.speedKph} KM/H · {text('CAP', 'จุ')} {vehicle.capacity} · {!owned ? text('SHOP', 'ร้านค้า') : state.level < vehicle.minLevel ? `${text('LVL', 'เลเวล')} ${vehicle.minLevel}` : vehicle.crewMin > staffAvailable ? text('NEED CREW', 'กำลังพลไม่พอ') : text('OWNED', 'มีแล้ว')}</div>
                         </button>
                       );
                     })}
                   </div>
 
                   <div className="fleet-status-box">
-                    <div className="mu" style={{ fontSize: '10px', marginBottom: 4 }}>STEP 2 · กำลังพล</div>
+                    <div className="mu" style={{ fontSize: '10px', marginBottom: 4 }}>{text('STEP 2 · CREW', 'ขั้นตอน 2 · กำลังพล')}</div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                       <button className="btn" style={{ padding: '2px 9px' }} disabled={state.selectedStaffCount <= currentVehicles[state.selectedVehicleSlot].crewMin} onClick={() => dispatch({ type: 'SET_STAFF_COUNT', payload: state.selectedStaffCount - 1 })}>−</button>
                       <b>{state.selectedStaffCount}/{Math.min(currentVehicles[state.selectedVehicleSlot].crewMax, state.inventory[`${state.activeDeptTab}StaffCount`])}</b>
@@ -943,19 +957,19 @@ export default function App() {
                     <div className="slots">
                       {Array.from({ length: Math.min(currentVehicles[state.selectedVehicleSlot].crewMax, state.inventory[`${state.activeDeptTab}StaffCount`]) }, (_, i) => <i key={i} className={i < state.selectedStaffCount ? 'f' : ''} />)}
                     </div>
-                    <div className="mt-2"><span className="pill">{state.dispatchedUnit ? state.dispatchedUnit.status : 'READY'}</span></div>
+                    <div className="mt-2"><span className="pill">{state.dispatchedUnit ? state.dispatchedUnit.status : text('READY', 'พร้อม')}</span></div>
                     {state.dispatchedUnit?.status === 'EN_ROUTE' && (
-                      <div className="mt-1 font-mono text-[10px] text-amber-300">RESPONSE TIME LEFT · {Math.max(0, 30 - state.travelElapsedSec).toFixed(1)}s</div>
+                      <div className="mt-1 font-mono text-[10px] text-amber-300">{text('RESPONSE TIME LEFT', 'เวลาถึงที่เกิดเหตุ')} · {Math.max(0, 30 - state.travelElapsedSec).toFixed(1)}s</div>
                     )}
                     <div style={{ marginTop: 6 }}>
-                      <button className="dispatch-action" onClick={handleDispatch} disabled={state.coordStatus !== 'VERIFIED' || Boolean(state.dispatchedUnit && state.dispatchedUnit.status !== 'SEARCHING_RELOCATION') || state.activeIncident?.deptCategory !== state.activeDeptTab}>DISPATCH</button>
+                      <button className="dispatch-action" onClick={handleDispatch} disabled={state.coordStatus !== 'VERIFIED' || Boolean(state.dispatchedUnit && state.dispatchedUnit.status !== 'SEARCHING_RELOCATION') || state.activeIncident?.deptCategory !== state.activeDeptTab}>{text('DISPATCH', 'สั่งการ')}</button>
                     </div>
                   </div>
                 </div>
 
                 <div className="fleet-footer">
-                  <span className="text-neutral-400 text-[11px]">{state.coordStatus === 'VERIFIED' ? 'STEP 4-5: CLICK INCIDENT MARKER ON MAP TO DISPATCH' : 'STEP 1-3: VERIFY COORDINATES BEFORE DISPATCH'}</span>
-                  <button className="dispatch-action" onClick={handleDispatch} disabled={state.coordStatus !== 'VERIFIED' || Boolean(state.dispatchedUnit && state.dispatchedUnit.status !== 'SEARCHING_RELOCATION') || state.activeIncident?.deptCategory !== state.activeDeptTab}>DISPATCH TO TARGET</button>
+                  <span className="text-neutral-400 text-[11px]">{state.coordStatus === 'VERIFIED' ? text('STEP 4-5: CLICK INCIDENT MARKER ON MAP TO DISPATCH', 'ขั้นตอน 4-5: คลิกตำแหน่งเหตุบนแผนที่เพื่อสั่งการ') : text('STEP 1-3: VERIFY COORDINATES BEFORE DISPATCH', 'ขั้นตอน 1-3: ยืนยันพิกัดก่อนสั่งการ')}</span>
+                  <button className="dispatch-action" onClick={handleDispatch} disabled={state.coordStatus !== 'VERIFIED' || Boolean(state.dispatchedUnit && state.dispatchedUnit.status !== 'SEARCHING_RELOCATION') || state.activeIncident?.deptCategory !== state.activeDeptTab}>{text('DISPATCH TO TARGET', 'สั่งการไปยังเป้าหมาย')}</button>
                 </div>
               </section>}
             </div>

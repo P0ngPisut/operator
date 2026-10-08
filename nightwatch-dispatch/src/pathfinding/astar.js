@@ -64,7 +64,8 @@ export function findRoute({
   if (!roadGraph.nodes.has(startNodeId) || !roadGraph.nodes.has(targetNodeId)) return null;
   if (startNodeId === targetNodeId) {
     const node = roadGraph.nodes.get(startNodeId);
-    return { nodeIds: [startNodeId], edgeIds: [], points: [{ x: node.x, y: node.y }], distanceM: 0, travelTimeSec: 0 };
+    const point = { x: node.x, y: node.y };
+    return { nodeIds: [startNodeId], edgeIds: [], points: [point], geometryPoints: [point], distanceM: 0, travelTimeSec: 0 };
   }
 
   const openSet = new MinHeap();
@@ -100,6 +101,7 @@ export function findRoute({
 
   const nodeIds = [targetNodeId];
   const edgeIds = [];
+  const routeEdges = [];
   let distanceM = 0;
   let cursor = targetNodeId;
 
@@ -108,12 +110,23 @@ export function findRoute({
     if (!step) return null;
     nodeIds.push(step.nodeId);
     edgeIds.push(step.edge.id);
+    routeEdges.push(step.edge);
     distanceM += step.edge.distanceM;
     cursor = step.nodeId;
   }
 
   nodeIds.reverse();
   edgeIds.reverse();
+  routeEdges.reverse();
+
+  const geometryPoints = [];
+  routeEdges.forEach((edge, index) => {
+    const from = roadGraph.nodes.get(nodeIds[index]);
+    const to = roadGraph.nodes.get(nodeIds[index + 1]);
+    if (index === 0) geometryPoints.push({ x: from.x, y: from.y });
+    geometryPoints.push(...(edge.controlPoints || []));
+    geometryPoints.push({ x: to.x, y: to.y });
+  });
 
   return {
     nodeIds,
@@ -122,6 +135,7 @@ export function findRoute({
       const node = roadGraph.nodes.get(nodeId);
       return { x: node.x, y: node.y };
     }),
+    geometryPoints,
     distanceM,
     travelTimeSec: travelTimes.get(targetNodeId),
   };

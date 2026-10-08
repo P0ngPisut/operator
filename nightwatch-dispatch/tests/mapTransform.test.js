@@ -1,11 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  panViewport,
-  screenToWorld,
-  worldToScreen,
-  zoomViewportAtPoint,
-} from '../src/systems/map/mapTransform.js';
+import * as transforms from '../src/systems/map/mapTransform.js';
+
+const { panViewport, screenToWorld, worldToScreen, zoomViewportAtPoint } = transforms;
 
 const initialViewport = {
   x: 5000,
@@ -43,31 +40,44 @@ test('drag pan moves the map in the drag direction', () => {
   assert.equal(screenPointAfter.y - screenPointBefore.y, -40);
 });
 
-test('city map is configured as 50x50 logical grid within valid boundaries', async () => {
+test('viewport clamps keep the painted map in view at any panel shape', () => {
+  const { clampViewportToMap, getVisibleWorldSize, MAP_WORLD } = transforms;
+  const wide = { x: -5000, y: 99999, zoom: 1, width: 1600, height: 1200 };
+  const clamped = clampViewportToMap(wide);
+  assert.equal(clamped.x, MAP_WORLD.widthM / 2);
+  // Visible height exceeds the map height, so the map is vertically centred.
+  assert.ok(getVisibleWorldSize(wide).height > MAP_WORLD.heightM);
+  assert.equal(clamped.y, MAP_WORLD.heightM / 2);
+
+  const zoomed = clampViewportToMap({ x: 0, y: 0, zoom: 4, width: 1600, height: 900 });
+  const visible = getVisibleWorldSize({ zoom: 4, width: 1600, height: 900 });
+  assert.equal(zoomed.x, visible.width / 2);
+  assert.equal(zoomed.y, visible.height / 2);
+});
+
+test('city map matches the painted base map and its logical grid', async () => {
   const { CITY, DISTRICTS, getMapLocation } = await import('../src/data/map/city.js');
   const { BASE_LOCATIONS } = await import('../src/data/vehicles.js');
   const { snapToRoadNode, CITY_ROAD_GRAPH } = await import('../src/pathfinding/graph.js');
 
-  assert.equal(CITY.gridColumns, 50);
-  assert.equal(CITY.gridRows, 50);
-  assert.equal(CITY.widthM, 5000);
-  assert.equal(CITY.heightM, 5000);
+  assert.equal(CITY.widthM, CITY.gridColumns * CITY.cellSizeM);
+  assert.equal(CITY.gridRows, Math.ceil(CITY.heightM / CITY.cellSizeM));
+  assert.equal(CITY_ROAD_GRAPH.widthM, CITY.widthM);
+  assert.equal(CITY_ROAD_GRAPH.heightM, CITY.heightM);
 
-  // All districts fit in 5000x5000
-  assert.ok(DISTRICTS.every((d) => d.minX >= 0 && d.maxX <= 5000 && d.minY >= 0 && d.maxY <= 5000));
-  // All sectors fit
-  assert.ok(DISTRICTS.every((d) => d.sectors.every((s) => s.minX >= 0 && s.maxX <= 5000 && s.minY >= 0 && s.maxY <= 5000)));
+  assert.ok(DISTRICTS.every((d) => d.minX >= 0 && d.maxX <= CITY.widthM && d.minY >= 0 && d.maxY <= CITY.heightM));
+  assert.ok(DISTRICTS.every((d) => d.sectors.every((s) => s.minX >= 0 && s.maxX <= CITY.widthM && s.minY >= 0 && s.maxY <= CITY.heightM)));
 
-  // Base stations inside 50x50 bounds
-  assert.ok(Object.values(BASE_LOCATIONS).every((loc) => loc.x >= 0 && loc.x <= 5000 && loc.y >= 0 && loc.y <= 5000));
+  // Base stations sit exactly on road nodes of the painted map.
+  for (const station of Object.values(BASE_LOCATIONS)) {
+    const node = CITY_ROAD_GRAPH.nodes.get(snapToRoadNode(station, CITY_ROAD_GRAPH));
+    assert.equal(node.x, station.x);
+    assert.equal(node.y, station.y);
+  }
 
-  // Snapping at corner snaps to N-50-50
-  assert.equal(snapToRoadNode({ x: 5000, y: 5000 }, CITY_ROAD_GRAPH), 'N-50-50');
-
-  // getMapLocation at center
-  const loc = getMapLocation(2500, 2500);
-  assert.equal(loc.cellColumn, 25);
-  assert.equal(loc.cellRow, 25);
+  const loc = getMapLocation(CITY.widthM / 2, CITY.heightM / 2);
+  assert.equal(loc.cellColumn, 50);
+  assert.equal(loc.cellRow, 27);
   assert.ok(loc.district);
   assert.ok(loc.sector);
 });

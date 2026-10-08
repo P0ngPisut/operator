@@ -8,8 +8,18 @@ export const MAP_WORLD = Object.freeze({
   defaultZoom: 1.3,
 });
 
+// Uniform scale: at zoom 1 the full map width fits the viewport width, so the
+// painted map keeps its aspect ratio regardless of the panel shape.
 function getPixelsPerMeter(viewport) {
   return (viewport.width / MAP_WORLD.widthM) * viewport.zoom;
+}
+
+export function getVisibleWorldSize(viewport) {
+  const pixelsPerMeter = getPixelsPerMeter(viewport);
+  return {
+    width: viewport.width / pixelsPerMeter,
+    height: viewport.height / pixelsPerMeter,
+  };
 }
 
 export function worldToScreen(point, viewport) {
@@ -33,7 +43,7 @@ export function screenToWorld(point, viewport) {
 export function zoomViewportAtPoint(viewport, screenPoint, requestedZoom) {
   const zoom = Math.min(MAP_WORLD.maxZoom, Math.max(MAP_WORLD.minZoom, requestedZoom));
   const anchorWorld = screenToWorld(screenPoint, viewport);
-  const nextPixelsPerMeter = (viewport.width / MAP_WORLD.widthM) * zoom;
+  const nextPixelsPerMeter = getPixelsPerMeter({ ...viewport, zoom });
 
   return {
     ...viewport,
@@ -54,10 +64,9 @@ export function panViewport(viewport, deltaX, deltaY) {
 }
 
 export function clampViewportToMap(viewport) {
-  const visibleWidth = MAP_WORLD.widthM / viewport.zoom;
-  const visibleHeight = viewport.height / getPixelsPerMeter(viewport);
-  const halfWidth = Math.min(MAP_WORLD.widthM / 2, visibleWidth / 2);
-  const halfHeight = Math.min(MAP_WORLD.heightM / 2, visibleHeight / 2);
+  const visible = getVisibleWorldSize(viewport);
+  const halfWidth = Math.min(MAP_WORLD.widthM / 2, visible.width / 2);
+  const halfHeight = Math.min(MAP_WORLD.heightM / 2, visible.height / 2);
 
   return {
     ...viewport,

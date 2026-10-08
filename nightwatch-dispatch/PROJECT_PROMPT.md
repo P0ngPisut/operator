@@ -29,7 +29,8 @@
 - ข้อมูลเหตุการณ์แบบสุ่ม: `src/data/incidents.js`
 - ประเมิน free-text: `src/utils/psychologicalEvaluator.js`
 - แผนที่และ overlay: `src/components/MapPanel.jsx`
-- ภาพฐานแผนที่ SVG: `public/nightwatch-tactical-map.svg`
+- ภาพฐานแผนที่: `public/nightwatch-city-map.jpg` (ภาพเมืองวงแหวน/แม่น้ำที่วาดไว้ ขนาด 2752×1536 px); React SVG overlay ใช้พิกัดจากข้อมูลเมืองใน `src/data/map/city.js` และ road graph ที่สกัดจากภาพใน `src/data/map/roadNetwork.js` ผ่าน `src/pathfinding/graph.js`
+- เครื่องมือสกัดถนนจากภาพ: `scripts/dumpMapPixels.ps1` → `scripts/extractRoadNetwork.mjs` → `src/data/map/roadNetwork.js` (ห้ามแก้ไฟล์ที่ generate ด้วยมือ ให้รันสคริปต์ใหม่เมื่อเปลี่ยนภาพ)
 - เสียงวิทยุ: `src/utils/audio.js`
 - คำสั่งที่ใช้ตรวจ: `npm run dev`, `npm run build`, `npm run lint`
 
@@ -84,7 +85,7 @@
 
 ## Map และ Unit Dispatch
 
-- ใช้ `public/nightwatch-tactical-map.svg` เป็นภาพฐานเวกเตอร์สัดส่วน 16:9 เพื่อให้ขยายบนจอความละเอียดสูงได้คมชัด
+- ใช้ `public/nightwatch-city-map.jpg` เป็นแผนที่จริงในหน้าจอ แล้ววาง incident, route, station และ unit markers บน world coordinates ชุดเดียวกัน (มุมซ้ายบนของภาพ = world (0,0); 1 px ≈ 3.63 m; viewport รักษาสัดส่วนภาพเสมอ ไม่ยืดภาพตามขนาด panel)
 - เป็นแผนที่เมืองจำลองที่วาดขึ้นใหม่ในสไตล์ satellite/vector hybrid ไม่ใช่ Google Maps tiles และไม่ควรอ้างว่าเป็นแผนที่จริง
 - React SVG overlay แสดงฐาน Police/Fire/Medical, จุด incident, signal radius, route, unit marker และสถานะเดินทาง
 - Coordinate Console มี BLOCK / SECTOR / UNIT ช่องละ 3 หลัก; VERIFY ต้องเทียบพิกัดเป้าหมายและบันทึกผล
@@ -237,8 +238,8 @@
 
 เป้าหมายหลัก:
 
-1. Map หลักมีขนาดจำลอง **10 × 10 km = 100 km²**
-2. แบ่งพื้นที่ภายในเป็น **100 × 100 logical grid**
+1. Map หลักมีขนาดจำลอง **10 × 5.58 km ≈ 56 km²** ตามสัดส่วนภาพ `public/nightwatch-city-map.jpg`
+2. แบ่งพื้นที่ภายในเป็น **100 × 56 logical grid**
 3. 1 grid cell = **100 × 100 m**; ไม่จำเป็นต้องวาดเส้น grid ทุกช่องตลอดเวลา
 4. มี hierarchy: CITY → DISTRICT → SECTOR → BLOCK / CELL
 5. Zoom เข้า/ออกด้วย mouse wheel โดยใช้ตำแหน่ง cursor เป็นจุดยึด; จุดใต้ cursor ต้องคงตำแหน่งบนหน้าจอขณะ zoom
@@ -628,6 +629,18 @@ Map controls: [+] zoom in, [-] zoom out, [⟳] reset, [⌖] focus incident, [CIT
 1. Audit codebase: สำรวจ files, state/actions, map rendering และ incident/unit model
 2. World coordinate + viewport: transform, pan, wheel zoom, cursor-centered zoom
 3. Map hierarchy: City, District, Sector, Block, breadcrumb และ focus navigation
+
+# 21. VERY LARGE CITY ROAD NETWORK — ACTIVE SPEC
+
+ใช้ข้อกำหนดจาก `Project Prompt/02_Map_Road_Network_Prompt.md` เป็นสเปกแผนที่และโครงข่ายถนนฉบับเต็ม โดยยึดโลกจำลอง 10 × 5.58 km (ตามสัดส่วนภาพ `public/nightwatch-city-map.jpg`), logical grid 100 × 56 cells (100 m ต่อ cell) และห้ามผูก gameplay กับ pixel ของภาพโดยตรง ให้ผ่าน world coordinates เท่านั้น
+
+ข้อมูลเมืองอยู่ใน `src/data/map/city.js`; road graph และ A* ใช้ world coordinates และข้อมูล node/edge ใน `src/data/map/roadNetwork.js` (สกัดจากภาพด้วย `scripts/extractRoadNetwork.mjs`: ถนนวงแหวนสีฟ้า = highway, ถนนกว้าง = arterial, ถนนแคบ = local, ถนนที่ข้ามแม่น้ำ = bridge) ผ่าน `src/pathfinding/graph.js` กับ `src/pathfinding/astar.js`. ตำแหน่ง incident และฐานหน่วยถูก snap ลงบน road node ของภาพเสมอ เอกสารแยกแต่ละหัวข้ออยู่ในโฟลเดอร์ `Project Prompt/`.
+
+เมื่อแก้แผนที่ ให้ตรวจว่า base locations, incident targets, route snapping, district/sector bounds และการวาด map overlay อยู่ในขอบเขต 10,000 × 5,580 m เดียวกัน ห้ามอ้างว่าเป็นข้อมูลกรุงเทพฯ จริง; เป็นเมืองสมมติที่ได้แรงบันดาลใจจากลักษณะผังเมืองเท่านั้น
+
+# 22. ACTIVE MAP DESIGN — ORGANIC METROPOLITAN NETWORK
+
+สร้างและแสดง tactical map ตาม `Project Prompt/02_Very_Large_City_Road_Network_Urban_Geography.md` โดยใช้ `public/nightwatch-city-map.jpg` เป็นภาพฐานในหน้าเกม ซ้อน incident, station, unit และ dispatch route บนภาพตาม world coordinates; ลบการวาด city fabric/ถนนกริดแบบเก่าออกจาก React component
 4. Road graph: nodes, edges, restrictions และ validation
 5. A*: shortest travel time, vehicle-aware route, blocked-road handling
 6. Unit simulation: position, route progress, EN_ROUTE, ARRIVED, RETURNING

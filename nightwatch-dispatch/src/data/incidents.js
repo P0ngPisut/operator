@@ -1,4 +1,5 @@
 import { CITY } from './map/city.js';
+import { snapWorldPointToRoad } from '../pathfinding/graph.js';
 import { generateDynamicIncident } from '../services/aiService.js';
 
 const DEPARTMENTS = ['police', 'fire', 'medical'];
@@ -126,10 +127,13 @@ const INCIDENT_SCENARIOS = {
 const randomItem = (items) => items[Math.floor(Math.random() * items.length)];
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomCoordinates = () => Array.from({ length: 3 }, () => String(randomInt(0, 999)).padStart(3, '0'));
-const randomWorldPosition = () => ({
-  x: randomInt(Math.round(CITY.widthM * 0.15), Math.round(CITY.widthM * 0.85)),
-  y: randomInt(Math.round(CITY.heightM * 0.15), Math.round(CITY.heightM * 0.85)),
-});
+const randomWorldPosition = () => {
+  const { x, y } = snapWorldPointToRoad({
+    x: randomInt(Math.round(CITY.widthM * 0.15), Math.round(CITY.widthM * 0.85)),
+    y: randomInt(Math.round(CITY.heightM * 0.15), Math.round(CITY.heightM * 0.85)),
+  });
+  return { x, y };
+};
 
 function createChoice({ id, text, tag, nextStep, ipTraceAdd = 0, panicChange = 0, revealCoords = false, triggerLost = false }) {
   return {

@@ -1,0 +1,108 @@
+# Project Prompt
+
+Prompt files for NIGHTWATCH / DISPATCH 04.
+
+- `00_All_Prompts.md`: master prompt and both map prompts.
+- `01_Master_Game_Prompt.md`: complete game prompt.
+- `02_Map_Road_Network_Prompt.md`: earlier road-network prompt.
+- `02_Very_Large_City_Road_Network_Urban_Geography.md`: latest attached map prompt.
+- `03_Map_*.md`: earlier map prompt split by heading.
+- `04_Game_*.md`: game prompt split by heading.
+- `05_Organic_Map_*.md`: latest map prompt split by heading.
+
+## Files
+
+- `00_All_Prompts.md`
+- `01_Master_Game_Prompt.md`
+- `02_Map_Road_Network_Prompt.md`
+- `02_Very_Large_City_Road_Network_Urban_Geography.md`
+- `03_Map_10_BRIDGES.md`
+- `03_Map_11_DISTRICT_CONNECTIVITY.md`
+- `03_Map_12_ROAD_DENSITY.md`
+- `03_Map_13_EMERGENCY_ROUTING_REQUIREMENT.md`
+- `03_Map_14_DATA_STRUCTURE.md`
+- `03_Map_15_GENERATION_RULE.md`
+- `03_Map_16_VISUAL_TARGET.md`
+- `03_Map_17_FINAL_REQUIREMENT.md`
+- `03_Map_1_WORLD_SCALE.md`
+- `03_Map_2_CITY_STRUCTURE.md`
+- `03_Map_3_ROAD_HIERARCHY.md`
+- `03_Map_4_DISTRICT_TYPE_SUPER_GRID.md`
+- `03_Map_5_DISTRICT_TYPE_CURVY_GRID.md`
+- `03_Map_6_DISTRICT_TYPE_FIVE_FINGER_PLAN.md`
+- `03_Map_7_DISTRICT_TYPE_CITY_IN_A_GARDEN.md`
+- `03_Map_8_MAIN_RIVER.md`
+- `03_Map_9_SECONDARY_RIVERS.md`
+- `03_Map_Arterial_Road.md`
+- `03_Map_Highway.md`
+- `03_Map_Local_Road.md`
+- `03_Map_MAP_VERY_LARGE_CITY_ROAD_NETWORK.md`
+- `04_Game_.md`
+- `04_Game_10_1.md`
+- `04_Game_10_2_Map_hierarchy.md`
+- `04_Game_10_3_World_coordinate.md`
+- `04_Game_10_4_Screen_World_transform.md`
+- `04_Game_10_5_Zoom_specification.md`
+- `04_Game_10_6_Zoom_level_of_detail.md`
+- `04_Game_10_7_District_navigation.md`
+- `04_Game_10_8_Map_camera_state.md`
+- `04_Game_10_MAP_CITY_SCALE_ZOOM_SYSTEM_IMPLEMENTATION_SPEC.md`
+- `04_Game_11_1_City.md`
+- `04_Game_11_2_District.md`
+- `04_Game_11_3_Sector.md`
+- `04_Game_11_4_Block.md`
+- `04_Game_11_5_Road.md`
+- `04_Game_11_MAP_DATA_MODEL.md`
+- `04_Game_12_1.md`
+- `04_Game_12_2_Logical_tables_collections.md`
+- `04_Game_12_DATABASE_PERSISTENCE_ARCHITECTURE.md`
+- `04_Game_13_PROJECT_ARCHITECTURE.md`
+- `04_Game_14_1.md`
+- `04_Game_14_2_Cost.md`
+- `04_Game_14_3_Dynamic_road_restrictions.md`
+- `04_Game_14_4_Unit_movement.md`
+- `04_Game_14_A_PATHFINDING.md`
+- `04_Game_15_INCIDENT_SPAWNER.md`
+- `04_Game_16_POLICE_FIRE_MEDICAL_DISPATCH_SYSTEM.md`
+- `04_Game_17_MAP_PERFORMANCE.md`
+- `04_Game_18_ACTUAL_CODEBASE_RECONCILIATION.md`
+- `04_Game_19_MAP_INPUT_UX.md`
+- `04_Game_20_DEFINITION_OF_DONE_MAP_ARCHITECTURE.md`
+- `04_Game_21_IMPLEMENTATION_ORDER.md`
+- `04_Game_21_VERY_LARGE_CITY_ROAD_NETWORK_ACTIVE_SPEC.md`
+- `04_Game_22_ACTIVE_MAP_DESIGN_ORGANIC_METROPOLITAN_NETWORK.md`
+- `04_Game_22_REQUIRED_DEVELOPER_OUTPUT_WHEN_MODIFYING_THE_PROJECT.md`
+- `04_Game_Active_Dispatch_Screen.md`
+- `04_Game_Definition_of_Done.md`
+- `04_Game_Economy_Progression.md`
+- `04_Game_Fleet.md`
+- `04_Game_Header.md`
+- `04_Game_Incident_Data.md`
+- `04_Game_Item_Catalog.md`
+- `04_Game_Map_Unit_Dispatch.md`
+- `04_Game_NIGHTWATCH_DISPATCH_04_Master_Project_Prompt.md`
+- `04_Game_Pre_Shift_Shop.md`
+- `04_Game_Psychological_Evaluator.md`
+- `04_Game_State_Data_Flow.md`
+- `04_Game_Tech_Stack.md`
+- `04_Game_balance.md`
+- `05_Organic_Map_.md`
+- `05_Organic_Map_1_1_Base_Land_Theme.md`
+- `05_Organic_Map_1_2_Road_Hierarchy_Colors_Opacity.md`
+- `05_Organic_Map_1_VISUAL_PALETTE_MAP_TONE.md`
+- `05_Organic_Map_2_WORLD_SCALE_TOPOGRAPHY.md`
+- `05_Organic_Map_3_1_Historic_Urban_Core.md`
+- `05_Organic_Map_3_2_Sprawl_Urban_Transition.md`
+- `05_Organic_Map_3_3_District_Types.md`
+- `05_Organic_Map_3_NATURAL_CITY_STRUCTURE_ORGANIC_DYNAMICS.md`
+- `05_Organic_Map_4_1_Road_Geometry_Variations.md`
+- `05_Organic_Map_4_2_Highway_Arterial_Network.md`
+- `05_Organic_Map_4_NATURAL_ROAD_HIERARCHY_GEOMETRY.md`
+- `05_Organic_Map_5_1_Main_River.md`
+- `05_Organic_Map_5_2_Secondary_Tributaries.md`
+- `05_Organic_Map_5_3_Bridges_Strategy.md`
+- `05_Organic_Map_5_WATERWAYS_BRIDGES_NATURAL_OBSTACLES.md`
+- `05_Organic_Map_6_EMERGENCY_ROUTING_MAP_FUNCTIONALITY.md`
+- `05_Organic_Map_7_1_Road_Data_Structure_Property_Geometry.md`
+- `05_Organic_Map_7_DATA_STRUCTURE_PROCEDURAL_GENERATION_RULES.md`
+- `05_Organic_Map_MAP_VERY_LARGE_CITY_ROAD_NETWORK_URBAN_GEOGRAPHY.md`

@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRoadGraph } from '../src/pathfinding/graph.js';
-import { findRoute } from '../src/pathfinding/astar.js';
+import { findRoute, findRouteBetweenWorldPoints } from '../src/pathfinding/astar.js';
+import { CITY_ROAD_GRAPH, snapWorldPointToRoad } from '../src/pathfinding/graph.js';
+import { BASE_LOCATIONS } from '../src/data/vehicles.js';
 
 const smallCity = { widthM: 200, heightM: 200, cellSizeM: 100 };
 const testVehicle = { speedKph: 60, widthM: 2 };
@@ -61,4 +63,33 @@ test('A* rejects roads that are too narrow for the vehicle', () => {
 
   assert.ok(route);
   assert.ok(route.nodeIds.length > 2);
+});
+
+test('painted-map road network is a single connected graph with bridges and road classes', () => {
+  assert.ok(CITY_ROAD_GRAPH.nodes.size > 1000);
+  assert.ok(CITY_ROAD_GRAPH.bridges.size > 0);
+  const types = new Set([...CITY_ROAD_GRAPH.roads.values()].map((road) => road.type));
+  assert.deepEqual([...types].sort(), ['arterial', 'highway', 'local']);
+
+  const visited = new Set([CITY_ROAD_GRAPH.nodes.keys().next().value]);
+  const stack = [...visited];
+  while (stack.length) {
+    const nodeId = stack.pop();
+    for (const edge of CITY_ROAD_GRAPH.adjacency.get(nodeId)) {
+      if (!visited.has(edge.toNodeId)) { visited.add(edge.toNodeId); stack.push(edge.toNodeId); }
+    }
+  }
+  assert.equal(visited.size, CITY_ROAD_GRAPH.nodes.size);
+});
+
+test('every base station can reach a point across the river on the painted map', () => {
+  const target = snapWorldPointToRoad({ x: 8600, y: 4400 });
+  for (const [department, station] of Object.entries(BASE_LOCATIONS)) {
+    const route = findRouteBetweenWorldPoints({ start: station, target, vehicle: testVehicle, department });
+    assert.ok(route, `${department} route`);
+    assert.ok(route.distanceM > 1000);
+    assert.ok(route.geometryPoints.length >= route.points.length);
+    assert.deepEqual(route.geometryPoints[0], route.points[0]);
+    assert.deepEqual(route.geometryPoints.at(-1), route.points.at(-1));
+  }
 });

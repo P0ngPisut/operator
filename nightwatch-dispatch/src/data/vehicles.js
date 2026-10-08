@@ -1,7 +1,8 @@
 export const BASE_LOCATIONS = Object.freeze({
-  police: { x: 3500, y: 13124, label: 'POLICE HQ' },
-  fire: { x: 7500, y: 13374, label: 'FIRE HQ' },
-  medical: { x: 15500, y: 7374, label: 'EMS HQ' },
+  // Positions sit on road nodes of the painted map (see scripts/extractRoadNetwork.mjs).
+  police: { x: 4494, y: 2249, label: 'POLICE HQ' },
+  fire: { x: 6258, y: 1492, label: 'FIRE HQ' },
+  medical: { x: 5240, y: 3998, label: 'EMS HQ' },
 });
 
 export const VEHICLE_CATALOG = Object.freeze({

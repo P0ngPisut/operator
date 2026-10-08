@@ -1,5 +1,5 @@
 export function getEdgeTravelTimeSec(edge, vehicle, department) {
-  if (edge.closed) return Infinity;
+  if (edge.closed || edge.restricted) return Infinity;
   if (!edge.allowedDepartments.includes(department)) return Infinity;
   if (vehicle.widthM && vehicle.widthM > edge.widthM) return Infinity;
 
