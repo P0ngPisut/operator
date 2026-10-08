@@ -6,6 +6,7 @@ import {
 import { gameReducer, initialState } from './context/gameReducer';
 import { generateIncidents } from './data/incidents';
 import { BASE_LOCATIONS, VEHICLE_CATALOG } from './data/vehicles';
+import { PLAY_GUIDE } from './data/guide/playGuide';
 import MapPanel from './components/MapPanel';
 import { callGeminiForDialogue, generateGeminiScenarioNarratives } from './services/aiService';
 
@@ -28,10 +29,12 @@ export default function App() {
   const [inputFocused, setInputFocused] = useState(false);
   const [dispatcherInput, setDispatcherInput] = useState('');
   const [waitingForCaller, setWaitingForCaller] = useState(false);
-  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('nightwatch_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '');
+  const geminiKey = localStorage.getItem('nightwatch_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [language, setLanguage] = useState(() => localStorage.getItem('nightwatch_language') === 'th' ? 'th' : 'en');
+  const [guideOpen, setGuideOpen] = useState(() => localStorage.getItem('nightwatch_play_guide_confirmed') !== 'true');
   const text = (english, thai) => language === 'th' ? thai : english;
+  const guide = PLAY_GUIDE[language];
 
   // Load the next call only after the previous incident is resolved.
   useEffect(() => {
@@ -59,11 +62,6 @@ export default function App() {
   }, [state.pendingCallerReply]);
 
   useEffect(() => {
-    if (geminiKey) localStorage.setItem('nightwatch_gemini_api_key', geminiKey);
-    else localStorage.removeItem('nightwatch_gemini_api_key');
-  }, [geminiKey]);
-
-  useEffect(() => {
     localStorage.setItem('nightwatch_language', language);
     document.documentElement.lang = language;
   }, [language]);
@@ -85,7 +83,7 @@ export default function App() {
   // 3. Keyboard Shortcuts (Q, W, E, A, S, D)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (inputFocused || state.gamePhase !== 'ACTIVE_SHIFT' || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (guideOpen || inputFocused || state.gamePhase !== 'ACTIVE_SHIFT' || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
       const key = e.key.toUpperCase();
       if (key === 'Q') dispatch({ type: 'SELECT_DEPT_TAB', payload: 'police' });
@@ -98,7 +96,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [inputFocused, state.gamePhase]);
+  }, [guideOpen, inputFocused, state.gamePhase]);
 
   const activeIncident = state.activeIncident;
   const currentVehicles = VEHICLE_CATALOG[state.activeDeptTab || 'police'];
@@ -117,6 +115,11 @@ export default function App() {
       type: 'DISPATCH_UNIT',
       payload: { vehicle: currentVehicles[state.selectedVehicleSlot], basePosition: BASE_LOCATIONS[state.activeDeptTab] },
     });
+  };
+
+  const confirmGuide = () => {
+    localStorage.setItem('nightwatch_play_guide_confirmed', 'true');
+    setGuideOpen(false);
   };
 
   const handleDispatcherSubmit = async (event) => {
@@ -603,6 +606,37 @@ export default function App() {
       `}</style>
 
       <div className="nightwatch-shell">
+        {guideOpen && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#05080b] p-4" role="dialog" aria-modal="true" aria-labelledby="play-guide-title">
+          <section className="flex max-h-[90vh] w-full max-w-2xl flex-col border border-cyan-800 bg-neutral-950 shadow-2xl shadow-cyan-950/30">
+            <header className="flex items-start justify-between gap-4 border-b border-neutral-800 p-5">
+              <div>
+                <p className="mb-1 font-mono text-[10px] tracking-[0.25em] text-cyan-400">NIGHTWATCH // DISPATCH 04</p>
+                <h1 id="play-guide-title" className="text-xl font-bold text-neutral-100">{guide.title}</h1>
+                <p className="mt-1 text-xs text-neutral-400">{guide.subtitle}</p>
+              </div>
+              <label className="shrink-0 text-[10px] text-neutral-400">{guide.languageLabel}
+                <select value={language} onChange={(event) => setLanguage(event.target.value)} className="mt-1 block border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-500">
+                  <option value="th">ไทย</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+            </header>
+            <ol className="min-h-0 space-y-4 overflow-y-auto p-5">
+              {guide.steps.map((step, index) => <li key={step.title} className="flex gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-cyan-800 bg-cyan-950 font-mono text-xs font-bold text-cyan-300">{index + 1}</span>
+                <div>
+                  <h2 className="text-sm font-bold text-neutral-100">{step.title}</h2>
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-400">{step.description}</p>
+                </div>
+              </li>)}
+            </ol>
+            <footer className="border-t border-neutral-800 p-4">
+              <button type="button" onClick={confirmGuide} className="w-full bg-cyan-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
+                {guide.confirm}
+              </button>
+            </footer>
+          </section>
+        </div>}
         {settingsOpen && <div className="absolute right-4 top-14 z-50 w-80 border border-neutral-700 bg-neutral-950 p-4 shadow-xl">
           <div className="mb-3 flex items-center justify-between"><b className="text-sm text-cyan-300">{text('SETTINGS', 'ตั้งค่า')}</b><button type="button" onClick={() => setSettingsOpen(false)} aria-label={text('Close settings', 'ปิดหน้าตั้งค่า')}>×</button></div>
           <label className="mb-3 block text-[10px] text-neutral-400">{text('LANGUAGE', 'ภาษา')}
@@ -611,11 +645,9 @@ export default function App() {
               <option value="en">English</option>
             </select>
           </label>
-          <label className="block text-[10px] text-neutral-400">{text('Google Gemini API key', 'คีย์ Google Gemini API')}
-            <input type="password" value={geminiKey} onChange={(event) => setGeminiKey(event.target.value)} placeholder={text('Paste API key', 'วาง API key')} className="mt-1 w-full border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-500" />
-          </label>
-          <p className="mt-2 text-[9px] text-emerald-400">{text('Key is saved automatically in this browser.', 'บันทึก key อัตโนมัติในเบราว์เซอร์นี้')}</p>
-          <p className="mt-1 text-[9px] text-neutral-500">{text('Close this panel and start a new shift, or send a message during an incident to use AI. The game uses fallback dialogue if no key is set or the request fails.', 'ปิดหน้าต่างนี้แล้วเริ่มกะใหม่ หรือส่งข้อความระหว่างเหตุการณ์เพื่อเรียก AI หากไม่มี key หรือเรียกไม่สำเร็จ เกมจะใช้ระบบสำรอง')}</p>
+          <button type="button" onClick={() => { setSettingsOpen(false); setGuideOpen(true); }} className="mt-3 w-full border border-neutral-700 px-2 py-1.5 text-left text-[10px] text-cyan-300 hover:bg-neutral-900">
+            {guide.settingsLink}
+          </button>
         </div>}
         {state.isGameOver && (
           <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-6 text-center border-4 border-red-600">
